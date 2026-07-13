@@ -33,6 +33,14 @@ This repository is a feature-focused fork of `rkzofficial/ha-miraie-ac`, designe
 
 ---
 
+## Companion Lovelace Card
+
+To get the most out of this integration, check out the [**MirAIe AC Lovelace Card**](https://github.com/selvakk2k/miraie-ac-card-in)!
+
+It is a premium, custom Lovelace thermostat card specifically designed to work seamlessly with this integration. It supports all the custom features exposed by this integration (Converti 8-in-1 presets, Nanoe, Coil Clean, external temperature sensors, etc.) and includes full visual editor support.
+
+---
+
 ## Installation
 
 ### Method 1: Using HACS (Recommended)
