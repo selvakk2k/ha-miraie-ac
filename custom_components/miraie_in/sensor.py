@@ -17,6 +17,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -443,7 +444,11 @@ async def async_backfill_energy_statistics(
     if not hub.http or hub.http.closed:
         hub.http = aiohttp.ClientSession()
 
-    statistic_id = f"sensor.{device.id}_energy_history"
+    entity_reg = er.async_get(hass)
+    statistic_id = entity_reg.async_get_entity_id("sensor", DOMAIN, f"{device.id}_energy_history")
+    if not statistic_id:
+        statistic_id = f"sensor.{device.id}_energy_history"
+
     last_stats = await get_instance(hass).async_add_executor_job(
         get_last_statistics, hass, 2, statistic_id, False, {"sum"}
     )
