@@ -283,6 +283,14 @@ class MirAIeEnergyHistorySensor(MirAIeTodayEnergySensor):
     def sensor_label(self) -> str:
         return "Energy History"
 
+    async def get_energy_consumption(self) -> float | None:
+        """Fetch total cumulative energy consumption (backfilled sum + today's consumption)."""
+        today_value = await super().get_energy_consumption()
+        if today_value is None:
+            return None
+        base_sum = getattr(self.device, "backfilled_energy_sum", 0.0)
+        return round(base_sum + float(today_value), 2)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     """Set up MirAIe energy and status sensors from a config entry."""
@@ -505,6 +513,8 @@ async def async_backfill_energy_statistics(
     if not statistics:
         LOGGER.info("Backfill: no new points built for %s", device.friendly_name)
         return
+
+    setattr(device, "backfilled_energy_sum", running_sum)
 
     metadata = StatisticMetaData(
         has_sum=True,
