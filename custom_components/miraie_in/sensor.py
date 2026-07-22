@@ -11,7 +11,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import (
     StatisticData,
     StatisticMetaData,
-    async_add_external_statistics,
+    async_import_statistics,
     get_last_statistics,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -67,7 +67,7 @@ class MirAIeEnergySensor(SensorEntity, ABC):
         self._attr_unique_id = f"{device.id}_{self.sensor_label.lower()}_energy"
         self._attr_should_poll = False
         self._attr_device_class = SensorDeviceClass.ENERGY
-        self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_suggested_display_precision = 2
@@ -265,6 +265,20 @@ class MirAIeMonthlyEnergySensor(MirAIeEnergySensor):
             self._attr_last_reset = now
 
 
+class MirAIeEnergyHistorySensor(MirAIeTodayEnergySensor):
+    """Cumulative energy history sensor for long-term statistics & Energy Dashboard."""
+
+    def __init__(self, hub: MirAIeHub, device: MirAIeDevice):
+        super().__init__(hub, device)
+        self._attr_translation_key = "energy_history"
+        self._attr_unique_id = f"{device.id}_energy_history"
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    @property
+    def sensor_label(self) -> str:
+        return "Energy History"
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     """Set up MirAIe energy and status sensors from a config entry."""
     hub: MirAIeHub = entry.runtime_data
@@ -277,6 +291,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             MirAIeTodayEnergySensor(hub, device),
             MirAIeWeeklyEnergySensor(hub, device),
             MirAIeMonthlyEnergySensor(hub, device),
+            MirAIeEnergyHistorySensor(hub, device),
         ]
     async_add_entities(energy_sensors, update_before_add=True)
 
@@ -424,7 +439,7 @@ async def async_backfill_energy_statistics(
     if not hub.http or hub.http.closed:
         hub.http = aiohttp.ClientSession()
 
-    statistic_id = f"{DOMAIN}:{device.id}_daily_energy"
+    statistic_id = f"sensor.{device.id}_energy_history"
     last_stats = await get_instance(hass).async_add_executor_job(
         get_last_statistics, hass, 2, statistic_id, False, {"sum"}
     )
@@ -479,12 +494,12 @@ async def async_backfill_energy_statistics(
         has_sum=True,
         mean_type=0,
         unit_class="energy",
-        name=f"{device.friendly_name} Daily Energy",
+        name=f"{device.friendly_name} Energy History",
         source=DOMAIN,
         statistic_id=statistic_id,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     )
-    async_add_external_statistics(hass, metadata, statistics)
+    async_import_statistics(hass, metadata, statistics)
     LOGGER.info(
         "Backfill: added %s daily points for %s (%s to %s)",
         len(statistics),

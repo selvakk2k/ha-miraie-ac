@@ -74,16 +74,19 @@
     },
     "sensor": {
       "yesterday_consumption": {
-        "name": "Yesterday's Consumption"
+        "name": "Yesterday's Energy"
       },
       "current_consumption": {
-        "name": "Current Consumption"
+        "name": "Today's Energy"
       },
       "weekly_consumption": {
-        "name": "Weekly Consumption"
+        "name": "Weekly Energy"
       },
       "monthly_consumption": {
-        "name": "Monthly Consumption"
+        "name": "Monthly Energy"
+      },
+      "energy_history": {
+        "name": "Energy History"
       },
       "ac_temperature": {
         "name": "AC Temperature Sensor"
