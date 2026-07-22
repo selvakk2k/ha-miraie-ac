@@ -506,6 +506,20 @@ async def async_backfill_energy_statistics(
             first_day = day
         last_day = day
 
+    # Include today's point so HA recorder sum does not drop back to 0.0 for today
+    today = datetime.today().date()
+    today_str = today.strftime("%d%m%Y")
+    try:
+        today_data = await hub.get_energy_consumption(device, ConsumptionPeriodType.DAILY, from_date=today_str)
+        today_val = float(today_data.get(today_str) or 0.0)
+    except Exception:
+        today_val = 0.0
+
+    today_sum = running_sum + today_val
+    today_dt = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+    statistics.append(StatisticData(start=today_dt, sum=today_sum, state=today_sum))
+    last_day = today
+
     if not statistics:
         LOGGER.info("Backfill: no new points built for %s", device.friendly_name)
         return
