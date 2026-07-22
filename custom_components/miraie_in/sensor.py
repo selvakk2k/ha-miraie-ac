@@ -67,7 +67,7 @@ class MirAIeEnergySensor(SensorEntity, ABC):
         self._attr_unique_id = f"{device.id}_{self.sensor_label.lower()}_energy"
         self._attr_should_poll = False
         self._attr_device_class = SensorDeviceClass.ENERGY
-        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_state_class = None
         self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_suggested_display_precision = 2
@@ -499,7 +499,7 @@ async def async_backfill_energy_statistics(
         mean_type=0,
         unit_class="energy",
         name=f"{device.friendly_name} Energy History",
-        source=DOMAIN,
+        source="recorder",
         statistic_id=statistic_id,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     )
